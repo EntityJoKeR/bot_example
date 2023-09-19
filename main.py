@@ -9,6 +9,7 @@ from keyboard import kb_client
 from user import*
 from admin import*
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import callbacks
 
 storage = MemoryStorage()
 
@@ -35,7 +36,13 @@ async def ping(message: types.Message):
 
 @dp.message_handler(commands='start')
 async def start_cmnd(message: types.Message):
-    await bot.send_message(message.from_user.id, text=start_text, reply_markup = kb_client)
+    await bot.send_message(message.chat.id, text=start_text, reply_markup = kb_client)
+    await add_user(message)
+    
+
+@dp.message_handler(commands='id')
+async def start_cmnd(message: types.Message):
+    await bot.send_message(message.from_user.id, text=f'{message.from_user.id}\n {message.chat.id}', reply_markup = kb_client)
     await add_user(message)
     
 

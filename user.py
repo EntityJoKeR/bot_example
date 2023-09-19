@@ -4,7 +4,7 @@ from main import*
 from keyboard import inline_kb_main_menu
 from texts import*
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
+import callbacks
 
 
 @dp.message_handler(lambda message: 'Меню' in message.text)
