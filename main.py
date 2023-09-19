@@ -11,8 +11,21 @@ from admin import*
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 storage = MemoryStorage()
+
+
 async def on_startup(_):
     print('bot online')
+    
+    
+async def add_user(message):
+    user_dict = {
+        'id': message.from_user.id,
+        'username': message.from_user.id,
+        'firstname': message.from_user.first_name,
+        'orders': 0
+    }
+    db.users.insert_one(user_dict)
+    
 
 
 @dp.message_handler(lambda message: "bot" in message.text)
@@ -23,6 +36,7 @@ async def ping(message: types.Message):
 @dp.message_handler(commands='start')
 async def start_cmnd(message: types.Message):
     await bot.send_message(message.from_user.id, text=start_text, reply_markup = kb_client)
+    await add_user(message)
     
 
 
