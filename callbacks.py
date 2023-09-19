@@ -75,8 +75,8 @@ async def add_name(message: types.Message, state: FSMContext):
 async def add_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data_order:
         data_order['adress'] = message.text
+        await bot.send_message(chat_id=channel_id, text=f"xxx")
     await FSMOrder.next()
-    await bot.send_message(chat_id=channel_id, text=f"hhh")
     await message.reply('Отлично, ваш заказ будет отправлен менеджеру после чего он с вами свяжется.')
     
 
