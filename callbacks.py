@@ -5,6 +5,7 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from texts import*
 
+product_name = []
 
 
 async def add_user(message):
@@ -29,23 +30,16 @@ class FSMOrder(StatesGroup):
 async def order(callback: types.CallbackQuery):
     params = callback.data.split('_')
     user_id = int(params[1])
-    product_name = str(params[2])
+    product_name.append(str(params[2]))
     user = db.users.find_one({'id': user_id})
     if user is not None:
-
-        await FSMOrder.product_name.set()
-        #db.users.update_one({'id': callback.from_user.id}, {'$set': {'orders':user['orders'] + 1}})
+        await bot.send_message(callback.from_user.id, text=f'Отлично! Теперь укажите пожалуйса ваше имя')
+        await FSMOrder.name.set()
+        db.users.update_one({'id': callback.from_user.id}, {'$set': {'orders':user['orders'] + 1}})
         
     else:
         await add_user(callback)
-        await FSMOrder.product_name.set()
-        
-@dp.message_handler(state=FSMOrder.product_name)
-async def get_product_name(message: types.Message, state: FSMContext):
-    async with state.proxy() as data_order:
-        data_order['product_name'] = message.text
-    await FSMOrder.name.set()
-    await bot.send_message(message.from_user.id, text='Отлично! Теперь напишите ваше имя.')
+        await FSMOrder.name.set()
 
 @dp.message_handler(state=FSMOrder.name)
 async def add_name(message: types.Message, state: FSMContext):
@@ -83,15 +77,15 @@ async def add_name(message: types.Message, state: FSMContext):
 async def add_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data_order:
         data_order['adress'] = message.text
-        await bot.send_message(chat_id=channel_id, text=f"Заказ пользователя: @{message.from_user.username}"
-                                                                                    f"Название продукта{data_order['product_name']}"
-                                                                                    f"Количество: {data_order['quantity']}"
-                                                                                    f"Номер телефона: {data_order['number']}"
-                                                                                    f"Способ оплаты: {data_order['payment_method']}"
-                                                                                    f"Адрес: {data_order['adress']}")
+        await bot.send_message(chat_id=channel_id, text=f"Заказ пользователя: @{message.from_user.username}\n"
+                                                                                    f"Название продукта: {product_name[0]}\n"
+                                                                                    f"Количество: {data_order['quantity']}\n"
+                                                                                    f"Номер телефона: {data_order['number']}\n"
+                                                                                    f"Способ оплаты: {data_order['payment_method']}\n"
+                                                                                    f"Адрес: {data_order['adress']}\n")
     await state.finish()
-    product_name = None
     await message.reply('Отлично, ваш заказ будет отправлен менеджеру после чего он с вами свяжется.')
+    product_name.clear()
 
 
 
@@ -105,7 +99,7 @@ async def inline_menu(callback: types.CallbackQuery):
                                              callback_data=f'order_{callback.from_user.id}_{item["name"]}')
             inline_kb_menu.add(menu_but1)
             await bot.send_photo(callback.from_user.id,
-                                 caption=f'Название: {item["name"]}\nОписание: {item["description"]}\nЦена: {item["price"]}',
+                                 caption=f'\nНазвание:{item["name"]}\nОписание: {item["description"]}\nЦена: {item["price"]}',
                                  photo=item['photo'], reply_markup=inline_kb_menu)
     else:
         await callback.answer('вам нужно добавить продукцию в меню')

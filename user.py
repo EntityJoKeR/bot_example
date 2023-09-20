@@ -46,7 +46,7 @@ async def work_time(message: types.Message):
     
 @dp.message_handler(lambda message: 'Расположение' in message.text)
 async def coord(message: types.Message):
-    await message.answer(text=coord_text)
+    await message.answer(text=location)
     
 
 @dp.message_handler(lambda message: 'Главное меню' in message.text)

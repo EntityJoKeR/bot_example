@@ -6,18 +6,50 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 
+
 class FSMAdmin(StatesGroup):
     photo = State()
     name = State()
     description = State()
     price = State()
     
+
+@dp.message_handler(lambda message: 'Добавить сотрудника' in message.text)
+async def add_employee(message: types.Message):
+    if int(message.from_user.id) == owner_id:
+        if message.reply_to_message:
+            db.admins.insert_one({'admin_id': int(message.reply_to_message.from_user.id), 'admin_name': message.reply_to_message.from_user.username})
+            await message.answer(f'Сотрудник {message.reply_to_message.from_user.username} добавлен!')
+        else:
+            await message.reply('Данная команда должна быть отправлена на сообщение сотрудника которого вы хотите добавить в бота')
+    else:
+        await message.reply('Эта команда доступна только владельцу бота')
+        
+        
+@dp.message_handler(lambda message: 'Удалить сотрудника' in message.text)
+async def delete_admin(message: types.message):
+    if int(message.from_user.id) == owner_id:
+        if message.reply_to_message:
+            db.admins.delete_one({'admin_id': int(message.reply_to_message.from_user.id)})
+            await message.answer(f'Сотрудник {message.reply_to_message.from_user.username} удален!')
+        else:
+            await message.reply('Данная команда должна быть отправлена на сообщение сотрудника которого вы хотите удалить из бота')
+    else:
+        await message.reply('Эта команда доступна только владельцу бота')
+    
     
 @dp.message_handler(lambda message: 'Добавить товар' in message.text, state=None)
 async def start_upload(message: types.Message):
-    await FSMAdmin.photo.set()
-    await message.reply('Загрузите фото')
+    admins = list(db.admins.find())
+    admins_id = []
+    for item in admins:
+        admins_id.append(item['admin_id'])
     
+    if (message.from_user.id in admins_id) or (message.from_user.id == owner_id):
+        await FSMAdmin.photo.set()
+        await message.reply('Загрузите фото')
+    else:
+        await message.answer('Данная команда вам недоступна')
     
 @dp.message_handler(content_types=['photo'], state=FSMAdmin.photo)
 async def add_photo(message: types.Message, state: FSMContext):
