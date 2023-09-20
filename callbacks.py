@@ -118,6 +118,6 @@ async def inline_menu(callback: types.CallbackQuery):
     
 @dp.callback_query_handler(lambda callback: 'working_time' in  callback.data)
 async def working_time(callback: types.CallbackQuery):
-    await callback.message.answer(working_time)
+    await callback.message.answer(time_work)
 
 
