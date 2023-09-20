@@ -7,7 +7,7 @@ storage = MemoryStorage()
 db = MongoClient("mongodb+srv://dimonmarin16:Wotankist2004@example.sgljbgi.mongodb.net/?retryWrites=true&w=majority").bot
 #admins, market, bot
 
-channel_id = -100196026965
+channel_id =  -1001962026965
 
 token = "6535003795:AAGbT6UbMPwjoPjtc1UV8WoNxLUYtQz7-DE"
 bot = Bot(token=token)

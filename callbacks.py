@@ -2,6 +2,9 @@ from config import bot, dp, db, channel_id
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import StatesGroup, State
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from texts import*
+
 
 
 async def add_user(message):
@@ -15,6 +18,7 @@ async def add_user(message):
 
 
 class FSMOrder(StatesGroup):
+    product_name = State()
     name = State()
     number = State()
     quantity = State()
@@ -23,22 +27,26 @@ class FSMOrder(StatesGroup):
 
 @dp.callback_query_handler(lambda callback: 'order_' in callback.data, state=None)
 async def order(callback: types.CallbackQuery):
-    print('hdhdh')
     params = callback.data.split('_')
     user_id = int(params[1])
     product_name = str(params[2])
     user = db.users.find_one({'id': user_id})
     if user is not None:
-        await bot.send_message(callback.from_user.id, text='Отлично! Теперь напишите ваше имя.') 
-        await FSMOrder.name.set()
+
+        await FSMOrder.product_name.set()
         #db.users.update_one({'id': callback.from_user.id}, {'$set': {'orders':user['orders'] + 1}})
         
     else:
         await add_user(callback)
-        await bot.send_message(message.from_user.id, text='Отлично! Теперь напишите ваше имя.') 
-        await FSMOrder.name.set()
+        await FSMOrder.product_name.set()
         
-        
+@dp.message_handler(state=FSMOrder.product_name)
+async def get_product_name(message: types.Message, state: FSMContext):
+    async with state.proxy() as data_order:
+        data_order['product_name'] = message.text
+    await FSMOrder.name.set()
+    await bot.send_message(message.from_user.id, text='Отлично! Теперь напишите ваше имя.')
+
 @dp.message_handler(state=FSMOrder.name)
 async def add_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data_order:
@@ -75,15 +83,47 @@ async def add_name(message: types.Message, state: FSMContext):
 async def add_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data_order:
         data_order['adress'] = message.text
-        await bot.send_message(chat_id=channel_id, text=f"xxx")
-    await FSMOrder.next()
+        await bot.send_message(chat_id=channel_id, text=f"Заказ пользователя: @{message.from_user.username}"
+                                                                                    f"Название продукта{data_order['product_name']}"
+                                                                                    f"Количество: {data_order['quantity']}"
+                                                                                    f"Номер телефона: {data_order['number']}"
+                                                                                    f"Способ оплаты: {data_order['payment_method']}"
+                                                                                    f"Адрес: {data_order['adress']}")
+    await state.finish()
+    product_name = None
     await message.reply('Отлично, ваш заказ будет отправлен менеджеру после чего он с вами свяжется.')
+
+
+
+@dp.callback_query_handler(lambda callback: 'menu' in  callback.data)
+async def inline_menu(callback: types.CallbackQuery):
+    menu_list = list(db.market.find())
+    if len(menu_list) != 0:
+        for item in menu_list:
+            inline_kb_menu = InlineKeyboardMarkup(row_width=1)
+            menu_but1 = InlineKeyboardButton(text='Заказать товар',
+                                             callback_data=f'order_{callback.from_user.id}_{item["name"]}')
+            inline_kb_menu.add(menu_but1)
+            await bot.send_photo(callback.from_user.id,
+                                 caption=f'Название: {item["name"]}\nОписание: {item["description"]}\nЦена: {item["price"]}',
+                                 photo=item['photo'], reply_markup=inline_kb_menu)
+    else:
+        await callback.answer('вам нужно добавить продукцию в меню')
     
 
+@dp.callback_query_handler(lambda callback: 'commands' in  callback.data)
+async def inline_menu(callback: types.CallbackQuery):
+    await callback.message.answer(help_text)
     
+
+@dp.callback_query_handler(lambda callback: 'location' in  callback.data)
+async def inline_menu(callback: types.CallbackQuery):
+    await callback.message.answer(location)
 
     
     
-    
-    
-    
+@dp.callback_query_handler(lambda callback: 'working_time' in  callback.data)
+async def working_time(callback: types.CallbackQuery):
+    await callback.message.answer(working_time)
+
+

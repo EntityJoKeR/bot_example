@@ -14,7 +14,6 @@ async def menu(message: types.Message):
     if len(menu_list) != 0 :
         for item in menu_list:
             inline_kb_menu = InlineKeyboardMarkup(row_width=1)
-            
             menu_but1 = InlineKeyboardButton(text='Заказать товар', callback_data=f'order_{message.from_user.id}_{item["name"]}')
             inline_kb_menu.add(menu_but1)
             await bot.send_photo(message.from_user.id, caption=f'Название: {item["name"]}\nОписание: {item["description"]}\nЦена: {item["price"]}', photo=item['photo'], reply_markup=inline_kb_menu)
@@ -34,6 +33,7 @@ async def order(message: types.Message):
         for item in menu_list:
             inline_kb_menu = InlineKeyboardMarkup(row_width=1)
             menu_but1 = InlineKeyboardButton(text='Заказать товар', callback_data=f'order_{message.from_user.id}_{item["name"]}')
+            inline_kb_menu.add(menu_but1)
             await bot.send_photo(message.from_user.id, caption=f'Название: {item["name"]}\nОписание: {item["description"]}\nЦена: {item["price"]}', photo=item['photo'], reply_markup=inline_kb_menu)
     else:
         await message.answer('вам нужно добавить продукцию в меню')
